@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SRR Employee Absence Tracker</title>
+<meta name="theme-color" content="#1877f2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --blue:#1877f2; --blue-dk:#166fe5; --blue-bg:#e7f0fd;
+    --bg:#f0f2f5; --card:#fff; --text:#1c1e21; --muted:#606770; --faint:#8a8d91; --line:#dadde1; --line2:#eceef1;
+    --red:#d93025; --red-bg:#fdeced; --amber:#b06000; --amber-bg:#fef7e0; --green:#188038; --green-bg:#e6f4ea; --purple:#7c3aed; --purple-bg:#f3e8fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:Inter,'Noto Sans Myanmar',system-ui,sans-serif;font-size:15px;-webkit-tap-highlight-color:transparent}
+  .my{font-family:'Noto Sans Myanmar',Inter,sans-serif}
+  small.my,.sub.my{display:block;font-size:12px;color:var(--muted);font-weight:500;line-height:1.5}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .ti{font-size:1.15em;vertical-align:-2px}
+
+  .topbar{position:sticky;top:0;z-index:20;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  header{background:var(--blue);color:#fff;padding:12px 16px}
+  .hrow{display:flex;align-items:center;gap:10px;max-width:980px;margin:0 auto}
+  .htitle{flex:1;min-width:0}
+  .htitle b{display:block;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .htitle span{display:block;font-size:12px;opacity:.9;font-family:'Noto Sans Myanmar',sans-serif}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:14px;background:rgba(255,255,255,.18);white-space:nowrap}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:#9be29b}
+  .pill.off .dot{background:#ffb4ab}.pill.busy .dot{background:#ffe08a;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  .iconbtn{background:rgba(255,255,255,.18);border:0;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+
+  nav.tabs{background:#fff;border-bottom:1px solid var(--line)}
+  .tabsin{display:flex;max-width:980px;margin:0 auto;overflow-x:auto}
+  .tab{flex:1;min-width:84px;border:0;background:none;padding:9px 6px 7px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;text-align:center}
+  .tab i{font-size:20px;display:block}
+  .tab b{display:block;font-size:12px;font-weight:600;margin-top:2px}
+  .tab small{display:block;font-size:10.5px;font-family:'Noto Sans Myanmar',sans-serif}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .tab .badge{display:inline-block;background:var(--red);color:#fff;border-radius:9px;font-size:10px;padding:0 5px;margin-left:3px;vertical-align:2px}
+
+  main{max-width:980px;margin:0 auto;padding:14px 16px 90px}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.08);padding:16px;margin-bottom:14px}
+  .card h2{margin:0 0 2px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .card h2 + small.my{margin-bottom:12px}
+  .field{margin-bottom:14px}
+  .field > label{display:block;font-weight:600;font-size:13.5px;margin-bottom:6px}
+  .field > label small{display:inline;font-size:12px;color:var(--muted);font-family:'Noto Sans Myanmar',sans-serif;font-weight:500;margin-left:4px}
+  input[type=text],input[type=date],input[type=month],input[type=search],input[type=url],select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;outline:none;font-size:15px}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,119,242,.15)}
+  textarea{min-height:64px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;padding:11px 16px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--text);text-align:center;line-height:1.25}
+  .btn small{display:block;font-size:11px;font-weight:500;font-family:'Noto Sans Myanmar',sans-serif;opacity:.9}
+  .btn.primary{background:var(--blue);color:#fff}.btn.primary:active{background:var(--blue-dk)}
+  .btn.danger{background:var(--red-bg);color:var(--red)}
+  .btn.block{width:100%;padding:14px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.sm{padding:7px 11px;font-size:13px}
+
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:0;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 8px;cursor:pointer;text-align:center;font-weight:600;font-size:14px}
+  .seg button small{display:block;font-weight:500;font-size:11.5px;color:var(--muted);font-family:'Noto Sans Myanmar',sans-serif}
+  .seg button.on{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+  .reasons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .reasons button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 6px;cursor:pointer;text-align:center}
+  .reasons button i{font-size:22px;display:block;margin-bottom:2px}
+  .reasons button b{display:block;font-size:13px}
+  .reasons button small{display:block;font-size:11px;color:var(--muted);font-family:'Noto Sans Myanmar',sans-serif;line-height:1.4}
+  .reasons button.on{border-color:currentColor;border-width:2px}
+  @media (max-width:420px){.reasons{grid-template-columns:repeat(2,1fr)}}
+
+  .picker{border:1px solid var(--line);border-radius:10px;max-height:260px;overflow:auto;margin-top:8px}
+  .picker .opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line2);cursor:pointer}
+  .picker .opt:last-child{border-bottom:0}
+  .picker .opt:active,.picker .opt:hover{background:var(--bg)}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-bg);color:var(--blue);display:grid;place-items:center;font-weight:700;flex:none;font-size:14px}
+  .avatar.red{background:var(--red-bg);color:var(--red)}.avatar.amber{background:var(--amber-bg);color:var(--amber)}
+  .who{flex:1;min-width:0}
+  .who b{display:block;font-size:14.5px}
+  .who .my{font-size:12.5px;color:var(--muted)}
+  .who .meta{font-size:12px;color:var(--faint)}
+  .selected-emp{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--blue);background:var(--blue-bg);border-radius:10px}
+
+  .count{font-weight:800;font-size:13px;padding:3px 9px;border-radius:12px;background:var(--bg);color:var(--muted);white-space:nowrap}
+  .count.red{background:var(--red-bg);color:var(--red)}.count.amber{background:var(--amber-bg);color:var(--amber)}.count.green{background:var(--green-bg);color:var(--green)}
+
+  .preview{border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:14px;border-left:4px solid}
+  .preview.ok{background:var(--green-bg);border-color:var(--green);color:#137333}
+  .preview.warn{background:var(--amber-bg);border-color:var(--amber);color:#8a4b00}
+  .preview.bad{background:var(--red-bg);border-color:var(--red);color:#a50e0e}
+  .preview .my{display:block;font-size:12.5px;margin-top:2px}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  @media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border-radius:12px;padding:12px 14px}
+  .stat .v{font-size:28px;font-weight:800;line-height:1.1}
+  .stat .l{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-top:4px;color:var(--text)}
+  .stat .l small{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-family:'Noto Sans Myanmar',sans-serif;color:var(--muted);font-size:11px}
+  .s-blue{background:var(--blue-bg)}.s-blue .v{color:var(--blue)}
+  .s-red{background:var(--red-bg)}.s-red .v{color:var(--red)}
+  .s-amber{background:var(--amber-bg)}.s-amber .v{color:var(--amber)}
+  .s-purple{background:var(--purple-bg)}.s-purple .v{color:var(--purple)}
+
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar input[type=month],.toolbar select{width:auto;flex:1;min-width:140px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:16px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  .section-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px;display:flex;align-items:center;gap:6px}
+  .section-h small{text-transform:none;letter-spacing:0;font-family:'Noto Sans Myanmar',sans-serif;font-weight:500;color:var(--muted)}
+  .section-h.red{color:var(--red)}.section-h.amber{color:var(--amber)}.section-h.gray{color:var(--muted)}
+
+  .emp-row{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);cursor:pointer;border-left:4px solid transparent}
+  .emp-row.red{border-left-color:var(--red)}.emp-row.amber{border-left-color:var(--amber)}
+  .emp-row .top{display:flex;align-items:center;gap:10px}
+  .big{font-size:24px;font-weight:800;text-align:right;line-height:1}
+  .big small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+  .big.red{color:var(--red)}.big.amber{color:var(--amber)}
+  .dates{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+  .rp{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:12px;white-space:nowrap}
+
+  .hist-day{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 6px}
+  .hist{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .hist .notes{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .hist .del{background:none;border:0;color:var(--faint);cursor:pointer;padding:4px;font-size:18px}
+  .hist .del:hover{color:var(--red)}
+
+  .empty{text-align:center;color:var(--muted);padding:36px 12px}
+  .empty i{font-size:42px;color:var(--line);display:block;margin-bottom:6px}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  @media (min-width:640px){.modal-bg{align-items:center}.modal{border-radius:16px}}
+  .modal h3{margin:0 0 2px;font-size:18px;display:flex;align-items:center;gap:8px}
+  .modal .actions{display:flex;gap:8px;margin-top:16px}
+  .modal .actions .btn{flex:1}
+  .alert-modal{text-align:center}
+  .alert-modal .ic{width:64px;height:64px;border-radius:50%;background:var(--red-bg);color:var(--red);display:grid;place-items:center;font-size:34px;margin:4px auto 10px}
+  .alert-modal .n{font-size:44px;font-weight:800;color:var(--red);line-height:1}
+
+  .savebar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 10px rgba(0,0,0,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:none}
+  .savebar.show{display:block}
+  .savebar .in{max-width:980px;margin:0 auto;display:flex;gap:10px;align-items:center}
+  .savebar .btn{flex:1;padding:13px}
+  .pend{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}
+  .pend:last-child{border-bottom:0}
+  .pend .who{min-width:0}
+  .pend .count{white-space:normal}
+  .pend .x{background:none;border:0;color:var(--faint);font-size:20px;cursor:pointer;padding:4px 6px}
+  .pend .x:hover{color:var(--red)}
+  .inlist{font-size:11px;font-weight:700;color:var(--green);background:var(--green-bg);border-radius:10px;padding:2px 8px;white-space:nowrap}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#1c1e21;color:#fff;padding:11px 18px;border-radius:10px;font-weight:600;font-size:14px;z-index:60;transition:transform .25s;max-width:92vw;text-align:center}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  body.hasbar .toast{bottom:92px}
+  body.hasbar main{padding-bottom:110px}
+  .muted{color:var(--muted)}.faint{color:var(--faint)}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .mtable{width:100%;border-collapse:collapse;font-size:13.5px}
+  .mtable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 6px;border-bottom:1px solid var(--line);background:var(--bg)}
+  .mtable td{padding:8px 6px;border-bottom:1px solid var(--line2);vertical-align:top}
+  .dtag{display:inline-block;font-size:11px;font-weight:700;background:var(--blue-bg);color:var(--blue);border-radius:6px;padding:1px 6px;letter-spacing:.3px}
+  .depts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .depts button{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px 2px;cursor:pointer;text-align:center;font-weight:800;font-size:14px}
+  .depts button small{display:block;font-weight:500;font-size:9.5px;color:var(--muted);line-height:1.2;margin-top:2px}
+  .depts button.on{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+  @media (max-width:420px){.depts{grid-template-columns:repeat(3,1fr)}}
+  .switch{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+  .switch input{width:18px;height:18px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+<header>
+  <div class="hrow">
+    <div class="htitle">
+      <b><i class="ti ti-user-x"></i> Employee Absence Tracker</b>
+      <span>ဝန်ထမ်း အလုပ်ပျက်ရက် မှတ်တမ်း</span>
+    </div>
+    <span id="syncPill" class="pill off"><span class="dot"></span><span id="syncText">Offline</span></span>
+    <button class="iconbtn" id="btnSettings" title="Settings"><i class="ti ti-settings"></i></button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabsin">
+    <button class="tab active" data-tab="log"><i class="ti ti-circle-plus"></i><b>Log</b><small>မှတ်တမ်းတင်</small></button>
+    <button class="tab" data-tab="month"><i class="ti ti-alert-triangle"></i><b>This Month<span id="warnBadge"></span></b><small>ဒီလ</small></button>
+    <button class="tab" data-tab="history"><i class="ti ti-history"></i><b>History</b><small>မှတ်တမ်းများ</small></button>
+    <button class="tab" data-tab="employees"><i class="ti ti-users"></i><b>Employees</b><small>ဝန်ထမ်းများ</small></button>
+  </div>
+</nav>
+</div>
+
+<main>
+  <!-- ═════════ LOG ═════════ -->
+  <section id="tab-log">
+    <div id="pendingCard"></div>
+    <div class="card">
+      <h2><i class="ti ti-user-x" style="color:var(--blue)"></i> Log a missed day</h2>
+      <small class="my">အလုပ်မဆင်းသည့်ရက် မှတ်တမ်းတင်ရန်</small>
+
+      <div class="field">
+        <label>Employee <small>ဝန်ထမ်း</small></label>
+        <div id="empSelected" style="display:none"></div>
+        <div id="empSearchWrap">
+          <input type="search" id="empSearch" placeholder="Search name… / အမည်ရှာပါ…" autocomplete="off">
+          <div class="picker" id="empPicker"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="row2">
+          <div>
+            <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:6px">From <small class="muted my" style="display:inline">မှ</small></label>
+            <input type="date" id="dFrom">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;font-size:13.5px;margin-bottom:6px">To <small class="muted my" style="display:inline">အထိ</small></label>
+            <input type="date" id="dTo">
+          </div>
+        </div>
+        <div class="hint" id="rangeHint"></div>
+      </div>
+
+      <div class="field">
+        <label>How long <small>ကြာချိန်</small></label>
+        <div class="seg" id="segDays">
+          <button data-v="1" class="on">Full day<small>တစ်ရက်လုံး</small></button>
+          <button data-v="0.5">Half day<small>နေ့တစ်ဝက်</small></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Reason <small>အကြောင်းရင်း</small></label>
+        <div class="reasons" id="reasonGrid"></div>
+        <input type="text" id="reasonOther" placeholder="Type reason… / အကြောင်းရင်း ရေးပါ…" style="display:none;margin-top:8px">
+      </div>
+
+      <div class="field">
+        <label>Notes <small>မှတ်ချက်</small></label>
+        <textarea id="notes" placeholder="Optional / မဖြစ်မနေ မဟုတ်"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Logged by <small>မှတ်တမ်းတင်သူ</small></label>
+        <input type="text" id="loggedBy" placeholder="Your name / သင့်အမည်">
+      </div>
+
+      <div id="preview"></div>
+
+      <button class="btn primary block" id="btnSave"><i class="ti ti-playlist-add"></i><span>Add to list<small>စာရင်းထဲ ထည့်မည်</small></span></button>
+      <div class="hint" style="text-align:center">Add everyone who is absent, then tap <b>Save all</b> — one email for the whole list.<br><span class="my">ပျက်သူအားလုံး ထည့်ပြီးမှ Save all နှိပ်ပါ</span></div>
+    </div>
+  </section>
+
+  <!-- ═════════ MONTH ═════════ -->
+  <section id="tab-month" style="display:none">
+    <div class="toolbar">
+      <input type="month" id="mPick">
+      <div class="chips" id="siteChips"></div>
+      <select id="mDept"></select>
+      <button class="btn sm" id="btnExport"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+    </div>
+    <div class="stats" id="mStats"></div>
+    <div id="mList"></div>
+  </section>
+
+  <!-- ═════════ HISTORY ═════════ -->
+  <section id="tab-history" style="display:none">
+    <div class="toolbar">
+      <input type="search" id="hSearch" placeholder="Search name… / အမည်ရှာပါ…" style="flex:2;min-width:160px">
+      <input type="month" id="hMonth">
+      <select id="hReason"></select>
+    </div>
+    <div id="hList"></div>
+  </section>
+
+  <!-- ═════════ EMPLOYEES ═════════ -->
+  <section id="tab-employees" style="display:none">
+    <div class="toolbar">
+      <input type="search" id="eSearch" placeholder="Search name… / အမည်ရှာပါ…" style="flex:2;min-width:160px">
+      <select id="eDept" style="width:auto;flex:1;min-width:130px"></select>
+      <button class="btn primary sm" id="btnAddEmp"><i class="ti ti-user-plus"></i> Add</button>
+      <button class="btn sm" id="btnBulk"><i class="ti ti-list"></i> Bulk add</button>
+    </div>
+    <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="eShowInactive"> Show people who left <span class="my muted" style="font-size:12px">&nbsp;အလုပ်ထွက်သူများ ပြရန်</span></label>
+    <div id="eList"></div>
+  </section>
+</main>
+
+<!-- Generic modal -->
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<div class="savebar" id="saveBar"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   CONFIG — paste your Apps Script /exec URL here (or use ⚙ Settings)
+   ════════════════════════════════════════════════════════════════ */
+var CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzcezI4TzCl9daNIgvGZjioDUN0ZzmiAmIe2M4bvRfWokE98YjFPuAD9-JLF3DxH9ozbg/exec',
+  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1HOkG0MImXbECVJG5ODNlicE3wzrSxspfdPZ_39r6K1g/edit',
+  WARN_OVER_DAYS: 2,          // more than 2 days in a calendar month = warning
+  POLL_MS: 20000
+};
+
+/* All declarations live ABOVE init() so nothing is used before it exists. */
+var APP_VERSION = 'v5 · 2026-09-30';
+var STORE_KEY = 'srr_absence_v1';
+var PREF_KEY = 'srr_absence_prefs';
+var PENDING_KEY = 'srr_absence_pending';
+var pending = [];   // people added to the list but not saved yet
+var SITES = ['SRR1', 'SRR2'];
+var DEPTS = [
+  { k: 'BD',  en: 'Bearded Dragon',        my: 'ပုတ်သင်ညို မုတ်ဆိတ်' },
+  { k: 'IG',  en: 'Iguana',                my: 'ဖွတ်' },
+  { k: 'CG',  en: 'Chinese Cave Gecko',    my: 'တရုတ် ဂူအိမ်မြှောင်' },
+  { k: 'LPG', en: 'Leopard Gecko',         my: 'ကျားသစ် အိမ်မြှောင်' },
+  { k: 'DG',  en: 'Day Gecko (Grandis)',   my: 'နေ့ အိမ်မြှောင်' },
+  { k: 'GD',  en: 'Gold Dust Day Gecko',   my: 'ရွှေမှုန် အိမ်မြှောင်' },
+  { k: 'BTS', en: 'Blue Tongue Skink',     my: 'လျှာပြာ ကင်းလိပ်' },
+  { k: 'BWT', en: 'Black & White Tegu',    my: 'အဖြူအမည်း တီဂူ' },
+  { k: 'RT',  en: 'Red Tegu',              my: 'အနီ တီဂူ' },
+  { k: 'Crickets', en: 'Crickets',         my: 'ပုရစ်' },
+  { k: 'Gardener', en: 'Gardener',         my: 'ဥယျာဉ်မှူး' },
+  { k: 'Mechanic', en: 'Mechanic',         my: 'စက်ပြင်' },
+  { k: 'Maid',     en: 'Maid',             my: 'အိမ်အကူ' },
+  { k: 'Other', en: 'Other',               my: 'အခြား' }
+];
+var DEPT_BY = {};
+DEPTS.forEach(function (d) { DEPT_BY[d.k] = d; });
+function deptLabel(k) { var d = DEPT_BY[k]; return d ? d.k + (d.en === d.k ? '' : ' · ' + d.en) : (k || '—'); }
+var REASONS = [
+  { k: 'sick',     en: 'Sick',            my: 'နေမကောင်း',                  icon: 'ti-thermometer',   color: '#d93025', bg: '#fdeced' },
+  { k: 'personal', en: 'Personal',        my: 'ကိုယ်ရေးကိစ္စ',               icon: 'ti-user',          color: '#1877f2', bg: '#e7f0fd' },
+  { k: 'family',   en: 'Family',          my: 'မိသားစုကိစ္စ',                icon: 'ti-home-heart',    color: '#7c3aed', bg: '#f3e8fd' },
+  { k: 'noshow',   en: 'No call / no show', my: 'အကြောင်းမကြားဘဲ ပျက်',      icon: 'ti-phone-off',     color: '#b06000', bg: '#fef7e0' },
+  { k: 'leave',    en: 'Approved leave',  my: 'ခွင့်ယူ (ခွင့်ပြုပြီး)',        icon: 'ti-calendar-check',color: '#188038', bg: '#e6f4ea' },
+  { k: 'other',    en: 'Other',           my: 'အခြား',                      icon: 'ti-dots',          color: '#606770', bg: '#f0f2f5' }
+];
+var REASON_BY = {};
+REASONS.forEach(function (r) { REASON_BY[r.k] = r; });
+
+var state = { employees: [], absences: [], lastModified: 0, queue: [] };
+var prefs = { url: '', loggedBy: '' };
+var form = { employeeId: '', days: 1, reason: '' };
+var ui = { tab: 'log', site: 'all', dept: 'all' };
+var syncing = false;
+var lastSyncOk = 0;
+var lastSyncErr = '';
+var pollTimer = null;
+var jsonpSeq = 0;
+var toastTimer = null;
+
+/* ════════════════ Storage ════════════════ */
+function loadLocal() {
+  try { var s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (s) state = Object.assign(state, s); } catch (e) {}
+  try { var p = JSON.parse(localStorage.getItem(PREF_KEY) || 'null'); if (p) prefs = Object.assign(prefs, p); } catch (e) {}
+  if (!Array.isArray(state.employees)) state.employees = [];
+  if (!Array.isArray(state.absences)) state.absences = [];
+  if (!Array.isArray(state.queue)) state.queue = [];
+}
+function saveLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+function loadPending() { try { var p = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); pending = Array.isArray(p) ? p : []; } catch (e) { pending = []; } }
+function savePending() { try { localStorage.setItem(PENDING_KEY, JSON.stringify(pending)); } catch (e) {} }
+function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) {} }
+function apiUrl() { return (prefs.url || CONFIG.APPS_SCRIPT_URL || '').trim(); }
+
+/* ════════════════ Helpers ════════════════ */
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function today() { return ymd(new Date()); }
+function thisMonth() { return today().slice(0, 7); }
+function parseYmd(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function fmtDay(s) { var d = parseYmd(s); return isNaN(d) ? s : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
+function fmtMonth(m) { var d = parseYmd(m + '-01'); return isNaN(d) ? m : d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }); }
+function fmtN(n) { return (Math.round(n * 10) / 10).toString(); }
+function tenure(start) {
+  if (!start) return '';
+  var a = parseYmd(start), b = new Date();
+  if (isNaN(a) || a > b) return '';
+  var months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) - (b.getDate() < a.getDate() ? 1 : 0);
+  var y = Math.floor(months / 12), mo = months % 12;
+  if (months < 1) return Math.max(0, Math.round((b - a) / 86400000)) + ' days';
+  return (y ? y + ' yr ' : '') + (mo ? mo + ' mo' : '');
+}
+function toYmd(v) {
+  v = String(v || '').trim();
+  var m = v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if (m) return m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]);
+  m = v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);   // dd/mm/yyyy (Thai/UK style)
+  if (m) return m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]);
+  return '';
+}
+function fmtLong(s) { var d = parseYmd(s); return isNaN(d) ? s : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function deptTag(k) { return '<span class="dtag">' + esc(k || '—') + '</span>'; }
+function initials(name) { return String(name || '?').trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); }
+function dateRange(from, to) {
+  var out = [], a = parseYmd(from), b = parseYmd(to);
+  if (isNaN(a) || isNaN(b)) return out;
+  if (b < a) { var t = a; a = b; b = t; }
+  for (var d = new Date(a); d <= b && out.length < 62; d.setDate(d.getDate() + 1)) out.push(ymd(d));
+  return out;
+}
+function empById(id) { for (var i = 0; i < state.employees.length; i++) if (state.employees[i].id === id) return state.employees[i]; return null; }
+function empName(a) { var e = empById(a.employeeId); return { en: (e && e.nameEn) || a.nameEn || '?', my: (e && e.nameMy) || a.nameMy || '', site: (e && e.site) || a.site || '', dept: (e && e.dept) || a.dept || '', start: (e && e.startDate) || '' }; }
+function pendingDays(empId, month) {
+  var t = 0;
+  pending.forEach(function (g) { if (g.employeeId === empId) g.dates.forEach(function (d) { if (d.slice(0, 7) === month) t += g.days; }); });
+  return t;
+}
+function inPending(empId) { return pending.some(function (g) { return g.employeeId === empId; }); }
+function monthAbs(empId, month) { return state.absences.filter(function (a) { return a.employeeId === empId && String(a.date).slice(0, 7) === month; }); }
+function sumDays(list) { return list.reduce(function (s, a) { return s + (Number(a.days) || 1); }, 0); }
+function level(total) { return total > CONFIG.WARN_OVER_DAYS ? 'red' : total >= CONFIG.WARN_OVER_DAYS ? 'amber' : ''; }
+function reasonPill(a) {
+  var r = REASON_BY[a.reason] || REASON_BY.other;
+  var label = a.reason === 'other' && a.reasonOther ? a.reasonOther : r.en;
+  return '<span class="rp" style="background:' + r.bg + ';color:' + r.color + '"><i class="ti ' + r.icon + '"></i>' + esc(label) + '</span>';
+}
+function toast(msg) {
+  var t = $('toast'); t.innerHTML = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3200);
+}
+function openModal(html) { $('modal').innerHTML = html; $('modalBg').classList.add('show'); }
+function closeModal() { $('modalBg').classList.remove('show'); }
+
+/* ════════════════ Server sync ════════════════ */
+function setSync(kind, text) {
+  var p = $('syncPill'); p.className = 'pill ' + kind; $('syncText').textContent = text;
+}
+function updateSyncPill() {
+  if (!apiUrl()) return setSync('off', 'Not connected');
+  if (!navigator.onLine) return setSync('off', 'Offline' + (state.queue.length ? ' · ' + state.queue.length + ' waiting' : ''));
+  if (syncing) return setSync('busy', 'Syncing…');
+  if (state.queue.length) return setSync('busy', state.queue.length + ' waiting');
+  if (lastSyncErr) return setSync('off', 'Sync error');
+  if (!lastSyncOk) return setSync('busy', 'Connecting…');
+  var t = new Date(lastSyncOk);
+  setSync('', 'Synced ' + pad(t.getHours()) + ':' + pad(t.getMinutes()));
+}
+
+function jsonp(url) {
+  return new Promise(function (resolve, reject) {
+    var cb = '__srrAbs' + (++jsonpSeq);
+    var s = document.createElement('script');
+    var timer = setTimeout(function () { cleanup(); reject(new Error('JSONP timeout')); }, 25000);
+    function cleanup() { clearTimeout(timer); try { delete window[cb]; } catch (e) { window[cb] = undefined; } if (s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function (data) { cleanup(); resolve(data); };
+    s.onerror = function () { cleanup(); reject(new Error('JSONP failed')); };
+    s.src = url + '&cbparam=' + cb;
+    document.head.appendChild(s);
+  });
+}
+
+function api(action, payload) {
+  var base = apiUrl();
+  if (!base) return Promise.reject(new Error('No Apps Script URL'));
+  var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action) +
+    (payload !== undefined ? '&payload=' + encodeURIComponent(JSON.stringify(payload)) : '') + '&t=' + Date.now();
+  return fetch(url, { method: 'GET', redirect: 'follow' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .catch(function () { return jsonp(url); })
+    .then(function (data) {
+      if (!data || data.ok !== true) throw new Error((data && data.error) || 'Bad response');
+      return data;
+    });
+}
+
+/* Split a list into chunks whose encoded JSON stays under ~5KB (GET URL limit). */
+function chunkForUrl(list) {
+  var chunks = [], cur = [];
+  list.forEach(function (item) {
+    var test = cur.concat([item]);
+    if (cur.length && encodeURIComponent(JSON.stringify(test)).length > 5000) { chunks.push(cur); cur = [item]; }
+    else cur = test;
+  });
+  if (cur.length) chunks.push(cur);
+  return chunks;
+}
+
+function enqueue(op, payload) {
+  if (Array.isArray(payload)) chunkForUrl(payload).forEach(function (c) { state.queue.push({ op: op, payload: c }); });
+  else state.queue.push({ op: op, payload: payload });
+  saveLocal();
+  flushQueue().then(function () { if (!state.queue.length) pull(false); });
+}
+
+function flushQueue() {
+  updateSyncPill();
+  if (syncing || !apiUrl() || !navigator.onLine || !state.queue.length) return Promise.resolve();
+  syncing = true; updateSyncPill();
+  var job = state.queue[0];
+  return api(job.op, job.payload).then(function (res) {
+    // NOTE: do NOT copy res.lastModified into state — another phone may have saved
+    // just before us, and we still need to download that. The pull after this does it.
+    state.queue.shift();
+    saveLocal();
+    syncing = false;
+    if (state.queue.length) return flushQueue();
+    updateSyncPill();
+  }).catch(function (err) {
+    syncing = false;
+    var msg = String(err && err.message || err);
+    // Server answered with a real error (not a network problem): retry a few times, then drop it
+    // so one bad item can never block this phone from syncing forever.
+    if (!/JSONP|HTTP|Failed to fetch|NetworkError|Load failed|timeout/i.test(msg)) {
+      job.tries = (job.tries || 0) + 1;
+      if (job.tries >= 3) { state.queue.shift(); toast('Could not save one item: ' + esc(msg.slice(0, 80))); }
+      saveLocal();
+    }
+    lastSyncErr = msg;
+    console.warn('Sync failed, will retry:', err);
+    updateSyncPill();
+  });
+}
+
+var pulling = false;
+function pull(force) {
+  if (!apiUrl() || !navigator.onLine) { updateSyncPill(); return Promise.resolve(); }
+  if (pulling) return Promise.resolve();
+  pulling = true;
+  return flushQueue().then(function () {
+    if (state.queue.length) return;          // still unsynced local changes → upload those first
+    return api('list').then(function (data) {
+      // Cold-start guard: only accept a proper response.
+      if (!Array.isArray(data.employees) || !Array.isArray(data.absences)) throw new Error('Incomplete response');
+      if (state.queue.length) return;        // user saved something while we were downloading
+      lastSyncOk = Date.now(); lastSyncErr = '';
+      // Compare the actual content, not just a timestamp — apply whenever the sheet differs from this phone.
+      var emps = data.employees.map(function (e) { e.active = e.active !== false && e.active !== 'false'; return e; });
+      var abs = data.absences.map(function (a) { a.days = Number(a.days) === 0.5 ? 0.5 : 1; return a; });
+      var sig = signature(emps, abs);
+      if (!force && sig === state.sig) return;
+      state.employees = emps;
+      state.absences = abs;
+      state.sig = sig;
+      state.lastModified = data.lastModified || 0;
+      saveLocal();
+      renderAll();
+    });
+  }).catch(function (err) {
+    lastSyncErr = String(err && err.message || err);
+    console.warn('Pull failed:', err);
+  }).then(function () { pulling = false; updateSyncPill(); });
+}
+function signature(emps, abs) {
+  var s = emps.map(function (e) { return e.id + ':' + e.updatedAt + ':' + e.active; }).sort().join(',') + '|' +
+          abs.map(function (a) { return a.id + ':' + a.updatedAt; }).sort().join(',');
+  var h = 0;
+  for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return emps.length + '/' + abs.length + '/' + h;
+}
+
+function startPolling() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(function () { pull(false); }, CONFIG.POLL_MS);
+}
+
+/* ════════════════ Tabs ════════════════ */
+function showTab(name) {
+  ui.tab = name;
+  pull(false);
+  document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === name); });
+  ['log', 'month', 'history', 'employees'].forEach(function (n) { $('tab-' + n).style.display = n === name ? '' : 'none'; });
+  renderAll();
+  window.scrollTo(0, 0);
+}
+
+function renderAll() {
+  renderWarnBadge();
+  if (ui.tab === 'log') renderLog();
+  if (ui.tab === 'month') renderMonth();
+  if (ui.tab === 'history') renderHistory();
+  if (ui.tab === 'employees') renderEmployees();
+}
+
+function renderWarnBadge() {
+  var m = thisMonth(), n = 0;
+  state.employees.forEach(function (e) { if (sumDays(monthAbs(e.id, m)) > CONFIG.WARN_OVER_DAYS) n++; });
+  $('warnBadge').innerHTML = n ? '<span class="badge">' + n + '</span>' : '';
+}
+
+/* ════════════════ LOG TAB ════════════════ */
+function renderReasonGrid() {
+  $('reasonGrid').innerHTML = REASONS.map(function (r) {
+    var on = form.reason === r.k;
+    return '<button data-k="' + r.k + '" class="' + (on ? 'on' : '') + '" style="' + (on ? 'color:' + r.color + ';background:' + r.bg : '') + '">' +
+      '<i class="ti ' + r.icon + '" style="color:' + r.color + '"></i><b>' + r.en + '</b><small>' + r.my + '</small></button>';
+  }).join('');
+  $('reasonOther').style.display = form.reason === 'other' ? '' : 'none';
+}
+
+function renderPicker() {
+  var q = $('empSearch').value.trim().toLowerCase();
+  var m = thisMonth();
+  var list = state.employees.filter(function (e) { return e.active !== false; })
+    .filter(function (e) { return !q || (e.nameEn + ' ' + e.nameMy + ' ' + e.dept + ' ' + e.site).toLowerCase().indexOf(q) >= 0; })
+    .sort(function (a, b) { return a.nameEn.localeCompare(b.nameEn); });
+  if (!state.employees.length) {
+    $('empPicker').innerHTML = '<div class="empty" style="padding:18px"><i class="ti ti-users"></i>No employees yet.<br><span class="my">ဝန်ထမ်း မရှိသေးပါ</span><br><br><button class="btn primary sm" onclick="showTab(\'employees\')"><i class="ti ti-user-plus"></i> Add employees</button></div>';
+    return;
+  }
+  if (!list.length) { $('empPicker').innerHTML = '<div class="empty" style="padding:18px">No match / မတွေ့ပါ</div>'; return; }
+  $('empPicker').innerHTML = list.map(function (e) {
+    var t = sumDays(monthAbs(e.id, m)) + pendingDays(e.id, m), lv = level(t);
+    return '<div class="opt" data-id="' + esc(e.id) + '"><div class="avatar ' + lv + '">' + esc(initials(e.nameEn)) + '</div>' +
+      '<div class="who"><b>' + esc(e.nameEn) + '</b><div class="my">' + esc(e.nameMy) + '</div><div class="meta">' + esc(e.site) + ' · ' + esc(e.dept) + '</div></div>' +
+      (inPending(e.id) ? '<span class="inlist">✓ In list</span>' : '') +
+      (t ? '<span class="count ' + lv + '">' + fmtN(t) + ' d</span>' : '') + '</div>';
+  }).join('');
+}
+
+function renderSelectedEmp() {
+  var e = empById(form.employeeId);
+  if (!e) { $('empSelected').style.display = 'none'; $('empSearchWrap').style.display = ''; renderPicker(); return; }
+  var t = sumDays(monthAbs(e.id, thisMonth())), lv = level(t);
+  $('empSelected').style.display = '';
+  $('empSearchWrap').style.display = 'none';
+  $('empSelected').innerHTML = '<div class="selected-emp"><div class="avatar ' + lv + '">' + esc(initials(e.nameEn)) + '</div>' +
+    '<div class="who"><b>' + esc(e.nameEn) + '</b><div class="my">' + esc(e.nameMy) + '</div><div class="meta">' + esc(e.site) + ' · ' + esc(e.dept) + '</div></div>' +
+    '<div style="text-align:center"><span class="count ' + lv + '">' + fmtN(t) + ' d</span><div class="faint" style="font-size:10.5px;margin-top:2px">this month<br><span class="my">ဒီလ</span></div></div>' +
+    '<button class="btn sm" id="btnChangeEmp" title="Change"><i class="ti ti-switch-horizontal"></i> Change</button></div>';
+  $('btnChangeEmp').onclick = function () { form.employeeId = ''; $('empSearch').value = ''; renderLog(); setTimeout(function () { $('empSearch').focus(); }, 50); };
+}
+
+function selectedDates() {
+  var from = $('dFrom').value, to = $('dTo').value || from;
+  if (!from) return [];
+  return dateRange(from, to);
+}
+
+function renderPreview() {
+  var dates = selectedDates();
+  var n = dates.length;
+  $('rangeHint').innerHTML = n ? (n === 1 ? fmtDay(dates[0]) : fmtDay(dates[0]) + ' → ' + fmtDay(dates[n - 1]) + ' · <b>' + n + ' days</b> / ' + n + ' ရက်') : '';
+  var box = $('preview');
+  var e = empById(form.employeeId);
+  if (!e || !n) { box.innerHTML = ''; return; }
+
+  // Work out totals per month after this save (skipping dates already logged).
+  var existing = takenDates(e.id);
+  var fresh = dates.filter(function (d) { return !existing[d]; });
+  var dup = n - fresh.length;
+  var months = {};
+  fresh.forEach(function (d) { var m = d.slice(0, 7); months[m] = (months[m] || 0) + form.days; });
+  var html = '';
+  Object.keys(months).forEach(function (m) {
+    var before = sumDays(monthAbs(e.id, m)) + pendingDays(e.id, m), after = before + months[m];
+    var lv = after > CONFIG.WARN_OVER_DAYS ? 'bad' : after === CONFIG.WARN_OVER_DAYS ? 'warn' : 'ok';
+    var icon = lv === 'bad' ? '⚠️' : lv === 'warn' ? '⚠' : '✓';
+    var msg = lv === 'bad' ? 'OVER LIMIT — ' + esc(e.nameEn) + ' will have <b>' + fmtN(after) + ' days</b> off in ' + fmtMonth(m) + ' (limit ' + CONFIG.WARN_OVER_DAYS + ')'
+      : lv === 'warn' ? 'At the limit — ' + esc(e.nameEn) + ' will have <b>' + fmtN(after) + ' days</b> off in ' + fmtMonth(m) + '. One more = warning.'
+      : esc(e.nameEn) + ' will have <b>' + fmtN(after) + ' day' + (after === 1 ? '' : 's') + '</b> off in ' + fmtMonth(m) + '.';
+    var my = lv === 'bad' ? 'သတိ — ဒီလ ' + fmtN(after) + ' ရက် ပျက်မည် (၂ ရက်ထက် ပိုနေသည်)'
+      : lv === 'warn' ? 'ဒီလ ' + fmtN(after) + ' ရက် ပြည့်ပြီ — နောက်တစ်ရက် ပျက်လျှင် သတိပေးမည်'
+      : 'ဒီလ ' + fmtN(after) + ' ရက်';
+    html += '<div class="preview ' + lv + '">' + icon + ' ' + msg + '<span class="my">' + my + '</span></div>';
+  });
+  if (dup) html += '<div class="preview warn">' + dup + ' day(s) already logged or already in the list for this person — they will be skipped.<span class="my">မှတ်ပြီးသား ရက် ' + dup + ' ရက် ကျော်သွားမည်</span></div>';
+  box.innerHTML = html;
+}
+
+function takenDates(empId) {
+  var t = {};
+  state.absences.forEach(function (a) { if (a.employeeId === empId) t[a.date] = true; });
+  pending.forEach(function (g) { if (g.employeeId === empId) g.dates.forEach(function (d) { t[d] = true; }); });
+  return t;
+}
+
+function renderPending() {
+  var card = $('pendingCard'), bar = $('saveBar');
+  if (!pending.length) { card.innerHTML = ''; bar.classList.remove('show'); document.body.classList.remove('hasbar'); return; }
+  var people = {}, days = 0;
+  pending.forEach(function (g) { people[g.employeeId] = 1; days += g.days * g.dates.length; });
+  var np = Object.keys(people).length;
+  card.innerHTML = '<div class="card" style="border:2px solid var(--amber);background:#fffdf5">' +
+    '<h2><i class="ti ti-list-check" style="color:var(--amber)"></i> Not saved yet (' + np + (np === 1 ? ' person' : ' people') + ')</h2>' +
+    '<small class="my">မသိမ်းရသေးပါ — Save all နှိပ်ပါ</small>' +
+    pending.map(function (g, i) {
+      var e = empById(g.employeeId) || {}, m = g.dates[g.dates.length - 1].slice(0, 7);
+      var t = sumDays(monthAbs(g.employeeId, m)) + pendingDays(g.employeeId, m), lv = level(t);
+      var dText = g.dates.length === 1 ? fmtDay(g.dates[0]) : fmtDay(g.dates[0]) + ' → ' + fmtDay(g.dates[g.dates.length - 1]) + ' (' + g.dates.length + ' d)';
+      return '<div class="pend"><div class="avatar ' + lv + '">' + esc(initials(e.nameEn)) + '</div>' +
+        '<div class="who"><b>' + esc(e.nameEn || '?') + '</b> <span class="my muted" style="font-size:12px">' + esc(e.nameMy || '') + '</span>' +
+        '<div style="margin-top:3px;display:flex;gap:5px;flex-wrap:wrap;align-items:center">' + reasonPill(g) +
+        '<span class="count">' + dText + (g.days === 0.5 ? ' · ½' : '') + '</span>' +
+        '<span class="count ' + lv + '">' + (lv === 'red' ? '⚠️ ' : '') + fmtN(t) + ' d this month</span></div>' +
+        (g.notes ? '<div class="notes faint" style="font-size:12px;margin-top:3px">' + esc(g.notes) + '</div>' : '') + '</div>' +
+        '<button class="x" data-rm="' + i + '" title="Remove">✕</button></div>';
+    }).join('') + '</div>';
+  bar.innerHTML = '<div class="in"><button class="btn" id="btnClearList" style="flex:0 0 auto">Clear</button>' +
+    '<button class="btn primary" id="btnSaveAll"><i class="ti ti-cloud-upload"></i><span>Save all · ' + np + (np === 1 ? ' person' : ' people') + ' · ' + fmtN(days) + ' d<small>အားလုံး သိမ်းမည်</small></span></button></div>';
+  bar.classList.add('show'); document.body.classList.add('hasbar');
+  $('btnSaveAll').onclick = saveAll;
+  $('btnClearList').onclick = function () {
+    if (!confirm('Remove everyone from the list? (nothing has been saved)')) return;
+    pending = []; savePending(); renderLog();
+  };
+  card.querySelectorAll('[data-rm]').forEach(function (b) {
+    b.onclick = function () { pending.splice(Number(b.dataset.rm), 1); savePending(); renderLog(); };
+  });
+}
+
+function renderLog() {
+  renderPending();
+  renderSelectedEmp();
+  renderReasonGrid();
+  document.querySelectorAll('#segDays button').forEach(function (b) { b.classList.toggle('on', Number(b.dataset.v) === form.days); });
+  renderPreview();
+}
+
+function addToList() {
+  var e = empById(form.employeeId);
+  if (!e) return toast('Choose an employee<br><span class="my">ဝန်ထမ်း ရွေးပါ</span>');
+  var dates = selectedDates();
+  if (!dates.length) return toast('Choose a date<br><span class="my">ရက်စွဲ ရွေးပါ</span>');
+  if (!form.reason) return toast('Choose a reason<br><span class="my">အကြောင်းရင်း ရွေးပါ</span>');
+  if (form.reason === 'other' && !$('reasonOther').value.trim()) return toast('Type the reason<br><span class="my">အကြောင်းရင်း ရေးပါ</span>');
+  var taken = takenDates(e.id);
+  var fresh = dates.filter(function (d) { return !taken[d]; });
+  if (!fresh.length) return toast(esc(e.nameEn) + ' is already logged / in the list for these dates<br><span class="my">ထည့်ပြီးသားပါ</span>');
+  pending.push({
+    gid: uid('g'), employeeId: e.id, dates: fresh, days: form.days, reason: form.reason,
+    reasonOther: form.reason === 'other' ? $('reasonOther').value.trim() : '', notes: $('notes').value.trim()
+  });
+  savePending();
+  // Ready for the next person: keep dates, reason and full/half day; clear the person and notes.
+  form.employeeId = ''; $('empSearch').value = ''; $('notes').value = '';
+  renderLog();
+  toast('✓ ' + esc(e.nameEn) + ' added — ' + pending.length + ' in list<br><span class="my">စာရင်းထဲ ထည့်ပြီး</span>');
+  setTimeout(function () { $('empSearch').focus(); }, 60);
+}
+
+function saveAll() {
+  if (!pending.length) return;
+  var loggedBy = $('loggedBy').value.trim();
+  if (!loggedBy) { $('loggedBy').focus(); $('loggedBy').scrollIntoView({ block: 'center' }); return toast('Enter your name (Logged by)<br><span class="my">သင့်အမည် ရေးပါ</span>'); }
+  prefs.loggedBy = loggedBy; savePrefs();
+
+  var now = Date.now(), batchId = uid('b'), records = [];
+  pending.forEach(function (g) {
+    var taken = {};
+    state.absences.forEach(function (a) { if (a.employeeId === g.employeeId) taken[a.date] = true; });
+    g.dates.forEach(function (d) {
+      if (taken[d]) return;  // someone else saved it meanwhile
+      records.push({ id: uid('a'), employeeId: g.employeeId, date: d, days: g.days, reason: g.reason, reasonOther: g.reasonOther,
+        notes: g.notes, loggedBy: loggedBy, createdAt: now, updatedAt: now, batchId: batchId });
+    });
+  });
+  if (!records.length) { pending = []; savePending(); renderLog(); return toast('Everything in the list was already saved'); }
+  records.forEach(function (r) { r.batchSize = records.length; });
+
+  records.forEach(function (r) {
+    var e = empById(r.employeeId) || {};
+    state.absences.push(Object.assign({ nameEn: e.nameEn, nameMy: e.nameMy, site: e.site, dept: e.dept }, r));
+  });
+  saveLocal();
+  enqueue('saveAbsences', records);
+
+  // Summary + warnings
+  var people = {};
+  records.forEach(function (r) { (people[r.employeeId] = people[r.employeeId] || []).push(r); });
+  var over = [];
+  Object.keys(people).forEach(function (id) {
+    var m = people[id][people[id].length - 1].date.slice(0, 7), t = sumDays(monthAbs(id, m));
+    if (t > CONFIG.WARN_OVER_DAYS) over.push({ e: empById(id) || {}, t: t, m: m });
+  });
+  pending = []; savePending();
+  form.employeeId = ''; form.reason = ''; form.days = 1;
+  $('empSearch').value = ''; $('notes').value = ''; $('reasonOther').value = '';
+  $('dFrom').value = today(); $('dTo').value = today();
+  renderAll();
+  showSaveSummary(Object.keys(people).length, records.reduce(function (t, r) { return t + r.days; }, 0), over);
+}
+
+function showSaveSummary(np, nd, over) {
+  openModal('<div class="alert-modal"><div class="ic" style="' + (over.length ? '' : 'background:var(--green-bg);color:var(--green)') + '"><i class="ti ti-' + (over.length ? 'alert-triangle' : 'check') + '"></i>' + (over.length ? '' : '✓') + '</div>' +
+    '<h3 style="justify-content:center">Saved ' + np + (np === 1 ? ' person' : ' people') + ' · ' + fmtN(nd) + ' day' + (nd === 1 ? '' : 's') + '</h3>' +
+    '<div class="my muted" style="margin-bottom:12px">သိမ်းပြီးပါပြီ' + (apiUrl() ? ' — email တစ်စောင် ပို့မည်' : '') + '</div>' +
+    (apiUrl() ? '<div class="hint" style="margin-bottom:10px">One email with the whole list is on its way.</div>' : '') +
+    (over.length ? '<div class="preview bad" style="text-align:left"><b>⚠️ Over the ' + CONFIG.WARN_OVER_DAYS + '-day limit:</b><br>' +
+      over.map(function (o) { return esc(o.e.nameEn) + ' — <b>' + fmtN(o.t) + ' days</b> in ' + fmtMonth(o.m); }).join('<br>') +
+      '<span class="my">၂ ရက်ထက် ပိုပျက်နေသည်</span></div>' : '') +
+    '<div class="actions"><button class="btn primary" onclick="closeModal()">OK<small>&nbsp;ကောင်းပြီ</small></button></div></div>');
+}
+
+function showOverLimit(e, m, t) {
+  var list = monthAbs(e.id, m).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  openModal('<div class="alert-modal"><div class="ic"><i class="ti ti-alert-triangle"></i></div>' +
+    '<h3 style="justify-content:center">Absence warning</h3><div class="my muted" style="margin-bottom:12px">ပျက်ရက် သတိပေးချက်</div>' +
+    '<div class="n">' + fmtN(t) + '</div><div class="muted" style="margin-bottom:12px">days in ' + fmtMonth(m) + ' · limit ' + CONFIG.WARN_OVER_DAYS + '</div>' +
+    '<b style="font-size:17px">' + esc(e.nameEn) + '</b><div class="my muted">' + esc(e.nameMy) + '</div>' +
+    '<div class="dates" style="justify-content:center;margin-top:12px">' + list.map(function (a) { return '<span class="rp" style="background:var(--bg)">' + fmtDay(a.date) + (a.days === 0.5 ? ' ½' : '') + '</span>'; }).join('') + '</div>' +
+    '<div class="preview bad" style="margin-top:14px;text-align:left">More than ' + CONFIG.WARN_OVER_DAYS + ' days missed this month. ' + (apiUrl() ? 'An email alert has been sent.' : '') +
+    '<span class="my">ဒီလ ၂ ရက်ထက် ပိုပျက်နေသည်</span></div>' +
+    '<div class="actions"><button class="btn primary" onclick="closeModal()">OK<small>&nbsp;ကောင်းပြီ</small></button></div></div>');
+}
+
+/* ════════════════ MONTH TAB ════════════════ */
+function fillDeptSelect(sel, allLabel) {
+  if (sel.options.length) return;
+  sel.innerHTML = '<option value="all">' + allLabel + '</option>' + DEPTS.map(function (d) { return '<option value="' + d.k + '">' + deptLabel(d.k) + '</option>'; }).join('');
+}
+function monthFiltered(m) {
+  return state.absences.filter(function (a) {
+    var n = empName(a);
+    return String(a.date).slice(0, 7) === m && (ui.site === 'all' || n.site === ui.site) && (ui.dept === 'all' || n.dept === ui.dept);
+  });
+}
+function renderMonth() {
+  fillDeptSelect($('mDept'), 'All departments / ဌာန အားလုံး');
+  $('mDept').value = ui.dept;
+  var m = $('mPick').value || thisMonth();
+  $('siteChips').innerHTML = ['all'].concat(SITES).map(function (s) {
+    return '<button class="chip ' + (ui.site === s ? 'on' : '') + '" data-site="' + s + '">' + (s === 'all' ? 'All' : s) + '</button>';
+  }).join('');
+
+  var abs = monthFiltered(m);
+  var byEmp = {};
+  abs.forEach(function (a) { (byEmp[a.employeeId] = byEmp[a.employeeId] || []).push(a); });
+  var rows = Object.keys(byEmp).map(function (id) {
+    var list = byEmp[id].sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    return { id: id, list: list, total: sumDays(list), n: empName(list[0]) };
+  }).sort(function (a, b) { return b.total - a.total || a.n.en.localeCompare(b.n.en); });
+
+  var over = rows.filter(function (r) { return r.total > CONFIG.WARN_OVER_DAYS; });
+  var at = rows.filter(function (r) { return r.total === CONFIG.WARN_OVER_DAYS; });
+  var rest = rows.filter(function (r) { return r.total < CONFIG.WARN_OVER_DAYS; });
+  var sick = sumDays(abs.filter(function (a) { return a.reason === 'sick'; }));
+
+  $('mStats').innerHTML =
+    stat(fmtN(sumDays(abs)), 'Days lost', 'ပျက်ရက် စုစုပေါင်း', 's-blue') +
+    stat(rows.length, 'People absent', 'ပျက်သည့် ဝန်ထမ်း', 's-purple') +
+    stat(over.length, 'Over limit', '၂ ရက်ထက် ပို', 's-red') +
+    stat(fmtN(sick), 'Sick days', 'နေမကောင်း ရက်', 's-amber');
+
+  if (!rows.length) {
+    $('mList').innerHTML = '<div class="card empty"><i class="ti ti-mood-happy"></i>No absences in ' + fmtMonth(m) + '<br><span class="my">ဒီလ ပျက်ရက် မရှိပါ</span></div>';
+    return;
+  }
+  var html = '';
+  if (over.length) html += '<div class="section-h red"><i class="ti ti-alert-triangle"></i> Over limit — more than ' + CONFIG.WARN_OVER_DAYS + ' days <small>၂ ရက်ထက် ပိုပျက်</small></div>' + over.map(empRow).join('');
+  if (at.length) html += '<div class="section-h amber"><i class="ti ti-alert-circle"></i> At limit — ' + CONFIG.WARN_OVER_DAYS + ' days <small>ကန့်သတ်ချက် ပြည့်ပြီ</small></div>' + at.map(empRow).join('');
+  if (rest.length) html += '<div class="section-h gray"><i class="ti ti-user"></i> Others <small>အခြား</small></div>' + rest.map(empRow).join('');
+  $('mList').innerHTML = html;
+}
+function stat(v, l, my, cls) { return '<div class="stat ' + cls + '"><div class="v">' + v + '</div><div class="l">' + l + '<small>' + my + '</small></div></div>'; }
+function empRow(r) {
+  var lv = level(r.total);
+  return '<div class="emp-row ' + lv + '" data-emp="' + esc(r.id) + '"><div class="top"><div class="avatar ' + lv + '">' + esc(initials(r.n.en)) + '</div>' +
+    '<div class="who"><b>' + esc(r.n.en) + '</b><div class="my">' + esc(r.n.my) + '</div><div class="meta">' + esc(r.n.site) + ' · ' + esc(r.n.dept) + '</div></div>' +
+    '<div class="big ' + lv + '">' + fmtN(r.total) + '<small>days / ရက်</small></div></div>' +
+    '<div class="dates">' + r.list.map(function (a) {
+      var rr = REASON_BY[a.reason] || REASON_BY.other;
+      return '<span class="rp" style="background:' + rr.bg + ';color:' + rr.color + '" title="' + esc(a.reason === 'other' ? a.reasonOther : rr.en) + '"><i class="ti ' + rr.icon + '"></i>' + fmtDay(a.date) + (Number(a.days) === 0.5 ? ' ½' : '') + '</span>';
+    }).join('') + '</div></div>';
+}
+
+/* ════════════════ HISTORY TAB ════════════════ */
+function renderHistory() {
+  if (!$('hReason').options.length) {
+    $('hReason').innerHTML = '<option value="">All reasons / အားလုံး</option>' + REASONS.map(function (r) { return '<option value="' + r.k + '">' + r.en + ' / ' + r.my + '</option>'; }).join('');
+  }
+  var q = $('hSearch').value.trim().toLowerCase(), m = $('hMonth').value, rk = $('hReason').value;
+  var list = state.absences.filter(function (a) {
+    var n = empName(a);
+    return (!m || String(a.date).slice(0, 7) === m) && (!rk || a.reason === rk) &&
+      (!q || (n.en + ' ' + n.my + ' ' + n.dept + ' ' + (a.notes || '')).toLowerCase().indexOf(q) >= 0);
+  }).sort(function (a, b) { return a.date === b.date ? (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0) : (a.date < b.date ? 1 : -1); });
+
+  if (!list.length) { $('hList').innerHTML = '<div class="card empty"><i class="ti ti-history"></i>Nothing found<br><span class="my">မတွေ့ပါ</span></div>'; return; }
+  var html = '', last = '';
+  list.slice(0, 400).forEach(function (a) {
+    if (a.date !== last) { html += '<div class="hist-day">' + fmtDay(a.date) + ' · ' + a.date.slice(0, 4) + '</div>'; last = a.date; }
+    var n = empName(a), t = sumDays(monthAbs(a.employeeId, a.date.slice(0, 7))), lv = level(t);
+    html += '<div class="hist"><div class="avatar ' + lv + '">' + esc(initials(n.en)) + '</div><div class="who">' +
+      '<b>' + esc(n.en) + ' <span class="my muted" style="font-weight:500;font-size:12.5px">' + esc(n.my) + '</span></b>' +
+      '<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">' + reasonPill(a) +
+      '<span class="count">' + (Number(a.days) === 0.5 ? 'Half ½' : 'Full') + '</span>' +
+      '<span class="count ' + lv + '">' + fmtN(t) + ' d this month</span></div>' +
+      (a.notes ? '<div class="notes"><i class="ti ti-note"></i> ' + esc(a.notes) + '</div>' : '') +
+      '<div class="notes faint">' + esc(n.site) + ' · ' + deptTag(n.dept) + (a.loggedBy ? ' · logged by ' + esc(a.loggedBy) : '') + '</div></div>' +
+      '<button class="del" data-del="' + esc(a.id) + '" title="Delete"><i class="ti ti-trash"></i></button></div>';
+  });
+  if (list.length > 400) html += '<div class="hint" style="text-align:center">Showing latest 400 — filter by month to see more.</div>';
+  $('hList').innerHTML = html;
+}
+
+function confirmDelete(id) {
+  var a = state.absences.filter(function (x) { return x.id === id; })[0];
+  if (!a) return;
+  var n = empName(a);
+  openModal('<h3><i class="ti ti-trash" style="color:var(--red)"></i> Delete this entry?</h3><div class="my muted">ဒီမှတ်တမ်း ဖျက်မလား?</div>' +
+    '<p><b>' + esc(n.en) + '</b> · ' + fmtDay(a.date) + ' · ' + reasonPill(a) + '</p>' +
+    '<div class="actions"><button class="btn" onclick="closeModal()">Cancel<small>&nbsp;မလုပ်တော့ပါ</small></button>' +
+    '<button class="btn danger" id="btnDoDelete"><i class="ti ti-trash"></i> Delete<small>&nbsp;ဖျက်မည်</small></button></div>');
+  $('btnDoDelete').onclick = function () {
+    state.absences = state.absences.filter(function (x) { return x.id !== id; });
+    saveLocal();
+    enqueue('deleteAbsence', { ids: [id] });
+    closeModal(); renderAll(); toast('Deleted / ဖျက်ပြီး');
+  };
+}
+
+/* ════════════════ EMPLOYEES TAB ════════════════ */
+function renderEmployees() {
+  fillDeptSelect($('eDept'), 'All departments');
+  var q = $('eSearch').value.trim().toLowerCase(), showInactive = $('eShowInactive').checked, m = thisMonth(), dF = $('eDept').value;
+  var list = state.employees.filter(function (e) { return (showInactive || e.active !== false) && (dF === 'all' || e.dept === dF) && (!q || (e.nameEn + ' ' + e.nameMy + ' ' + e.dept + ' ' + e.site).toLowerCase().indexOf(q) >= 0); })
+    .sort(function (a, b) { return (a.site + a.dept + a.nameEn).localeCompare(b.site + b.dept + b.nameEn); });
+  if (!state.employees.length) {
+    $('eList').innerHTML = '<div class="card empty"><i class="ti ti-users"></i>No employees yet — tap <b>Add</b> or <b>Bulk add</b>.<br><span class="my">ဝန်ထမ်း မရှိသေးပါ</span></div>';
+    return;
+  }
+  var html = '', lastGroup = '';
+  list.forEach(function (e) {
+    var g = e.site + ' · ' + deptLabel(e.dept);
+    if (g !== lastGroup) {
+      var cnt = list.filter(function (x) { return x.site === e.site && x.dept === e.dept; }).length;
+      html += '<div class="section-h gray"><i class="ti ti-map-pin"></i> ' + esc(g) + ' <small>(' + cnt + ')</small></div>'; lastGroup = g;
+    }
+    var t = sumDays(monthAbs(e.id, m)), lv = level(t);
+    html += '<div class="emp-row ' + lv + '" data-edit="' + esc(e.id) + '" style="' + (e.active === false ? 'opacity:.55' : '') + '"><div class="top">' +
+      '<div class="avatar ' + lv + '">' + esc(initials(e.nameEn)) + '</div><div class="who"><b>' + esc(e.nameEn) + (e.active === false ? ' <span class="count">left</span>' : '') + '</b><div class="my">' + esc(e.nameMy) + '</div>' +
+      (e.startDate ? '<div class="meta">Started ' + fmtLong(e.startDate) + ' · ' + tenure(e.startDate) + '</div>' : '<div class="meta" style="color:var(--amber)">No start date</div>') + '</div>' +
+      '<span class="count ' + lv + '">' + fmtN(t) + ' d</span><i class="ti ti-chevron-right faint"></i></div></div>';
+  });
+  $('eList').innerHTML = html || '<div class="card empty">No match / မတွေ့ပါ</div>';
+}
+
+function empForm(e) {
+  e = e || { id: '', nameEn: '', nameMy: '', site: '', dept: '', startDate: '', active: true };
+  var pick = { site: e.site || '', dept: e.dept || '' };
+  var isNew = !e.id;
+  var hist = '';
+  if (!isNew) {
+    // last 6 months summary
+    var d = new Date(), rows = '';
+    for (var i = 0; i < 6; i++) {
+      var m = d.getFullYear() + '-' + pad(d.getMonth() + 1), list = monthAbs(e.id, m), t = sumDays(list), lv = level(t);
+      rows += '<tr><td>' + fmtMonth(m) + '</td><td><span class="count ' + lv + '">' + fmtN(t) + '</span></td><td>' +
+        list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }).map(function (a) { return a.date.slice(8) + ((REASON_BY[a.reason] || {}).k === 'sick' ? '🤒' : ''); }).join(', ') + '</td></tr>';
+      d.setMonth(d.getMonth() - 1);
+    }
+    hist = '<div class="section-h gray" style="margin-top:18px"><i class="ti ti-calendar-stats"></i> Last 6 months <small>ပြီးခဲ့သော ၆ လ</small></div>' +
+      '<table class="mtable"><tr><th>Month</th><th>Days</th><th>Dates</th></tr>' + rows + '</table>';
+  }
+  openModal('<h3><i class="ti ti-' + (isNew ? 'user-plus' : 'user-edit') + '" style="color:var(--blue)"></i> ' + (isNew ? 'Add employee' : 'Edit employee') + '</h3>' +
+    '<div class="my muted" style="margin-bottom:14px">' + (isNew ? 'ဝန်ထမ်း ထည့်ရန်' : 'ဝန်ထမ်း ပြင်ရန်') + '</div>' +
+    '<div class="field"><label>English name <small>အမည် (အင်္ဂလိပ်)</small></label><input type="text" id="fNameEn" value="' + esc(e.nameEn) + '"></div>' +
+    '<div class="field"><label>Myanmar name <small>အမည် (မြန်မာ)</small></label><input type="text" id="fNameMy" class="my" value="' + esc(e.nameMy) + '"></div>' +
+    '<div class="field"><label>Location <small>နေရာ</small></label><div class="seg" id="fSite">' + SITES.map(function (s) { return '<button type="button" data-v="' + s + '">' + s + '</button>'; }).join('') + '</div></div>' +
+    '<div class="field"><label>Department <small>ဌာန</small></label><div class="depts" id="fDept">' + DEPTS.concat(e.dept && !DEPT_BY[e.dept] ? [{ k: e.dept, en: 'old' }] : []).map(function (d) { return '<button type="button" data-v="' + esc(d.k) + '" title="' + esc(d.en) + '"' + (d.k.length > 3 ? ' style="font-size:12.5px"' : '') + '>' + esc(d.k) + '<small>' + esc(d.en === d.k ? (d.my || '') : d.en) + '</small></button>'; }).join('') + '</div></div>' +
+    '<div class="field"><label>Date started working <small>အလုပ်စဝင်သည့်ရက်</small></label><input type="date" id="fStart" value="' + esc(e.startDate || '') + '"><div class="hint" id="fTenure"></div></div>' +
+    (isNew ? '' : '<label class="switch"><input type="checkbox" id="fActive"' + (e.active !== false ? ' checked' : '') + '> Still working here <span class="my muted" style="font-size:12px">&nbsp;အလုပ်ဆက်လုပ်နေဆဲ</span></label>') +
+    hist +
+    '<div class="actions"><button class="btn" onclick="closeModal()">Cancel<small>&nbsp;မလုပ်တော့ပါ</small></button>' +
+    '<button class="btn primary" id="btnSaveEmp"><i class="ti ti-device-floppy"></i> Save<small>&nbsp;သိမ်းမည်</small></button></div>');
+  $('btnSaveEmp').onclick = function () {
+    var nameEn = $('fNameEn').value.trim();
+    if (!nameEn) return toast('Enter English name<br><span class="my">အင်္ဂလိပ်အမည် ရေးပါ</span>');
+    var dupe = state.employees.filter(function (x) { return x.id !== e.id && x.nameEn.toLowerCase() === nameEn.toLowerCase() && x.active !== false; })[0];
+    if (dupe && isNew) return toast('Already exists: ' + esc(dupe.nameEn) + '<br><span class="my">ရှိပြီးသား</span>');
+    if (!pick.site) return toast('Choose location SRR1 / SRR2<br><span class="my">နေရာ ရွေးပါ</span>');
+    if (!pick.dept) return toast('Choose a department<br><span class="my">ဌာန ရွေးပါ</span>');
+    var rec = { id: e.id || uid('e'), nameEn: nameEn, nameMy: $('fNameMy').value.trim(), site: pick.site, dept: pick.dept, startDate: $('fStart').value,
+      active: isNew ? true : $('fActive').checked, updatedAt: Date.now() };
+    var idx = state.employees.findIndex(function (x) { return x.id === rec.id; });
+    if (idx >= 0) state.employees[idx] = rec; else state.employees.push(rec);
+    saveLocal();
+    enqueue('saveEmployees', [rec]);
+    closeModal(); renderAll(); toast('✓ Saved / သိမ်းပြီး');
+  };
+  function paintPick() {
+    document.querySelectorAll('#fSite button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === pick.site); });
+    document.querySelectorAll('#fDept button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === pick.dept); });
+    var t = tenure($('fStart').value);
+    $('fTenure').textContent = t ? 'Working here ' + t : '';
+  }
+  $('fSite').onclick = function (ev) { var b = ev.target.closest('button'); if (b) { pick.site = b.dataset.v; paintPick(); } };
+  $('fDept').onclick = function (ev) { var b = ev.target.closest('button'); if (b) { pick.dept = b.dataset.v; paintPick(); } };
+  $('fStart').onchange = paintPick;
+  paintPick();
+  setTimeout(function () { if (isNew) $('fNameEn').focus(); }, 60);
+}
+
+function bulkForm() {
+  openModal('<h3><i class="ti ti-list" style="color:var(--blue)"></i> Bulk add employees</h3><div class="my muted" style="margin-bottom:10px">ဝန်ထမ်း အများအပြား ထည့်ရန်</div>' +
+    '<div class="hint" style="margin-bottom:8px">One person per line. Separate with <b>|</b> or a Tab (you can paste straight from Excel):<br><code>English name | Myanmar name | SRR1/SRR2 | Dept | Start date</code><br>Dept = ' + DEPTS.map(function (d) { return d.k; }).join(', ') + ' · Start date as 2024-03-15 (optional)</div>' +
+    '<textarea id="bulkText" style="min-height:180px;font-family:monospace;font-size:13px" placeholder="Aow | အော် | SRR2 | BD | 2023-06-01&#10;Nay Ye Lin | နေရဲလင်း | SRR1 | LPG | 2024-01-15"></textarea>' +
+    '<div class="actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="btnBulkSave"><i class="ti ti-user-plus"></i> Add all</button></div>');
+  $('btnBulkSave').onclick = function () {
+    var lines = $('bulkText').value.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    var existing = {};
+    state.employees.forEach(function (e) { existing[e.nameEn.toLowerCase()] = true; });
+    var added = [], skipped = 0;
+    lines.forEach(function (l) {
+      var p = l.split(/\s*\|\s*|\t/).map(function (x) { return x.trim(); });
+      if (!p[0] || /^english/i.test(p[0])) return;
+      if (existing[p[0].toLowerCase()]) { skipped++; return; }
+      var site = (p[2] || '').toUpperCase().replace(/\s/g, '');
+      var dept = (p[3] || 'Other').trim();
+      var match = DEPTS.filter(function (d) { return d.k.toLowerCase() === dept.toLowerCase() || d.en.toLowerCase() === dept.toLowerCase(); })[0];
+      var start = toYmd(p[4] || '');
+      var rec = { id: uid('e'), nameEn: p[0], nameMy: p[1] || '', site: SITES.indexOf(site) >= 0 ? site : 'SRR2', dept: match ? match.k : 'Other', startDate: start, active: true, updatedAt: Date.now() };
+      existing[p[0].toLowerCase()] = true;
+      added.push(rec);
+    });
+    if (!added.length) return toast(skipped ? 'All already exist' : 'Nothing to add');
+    state.employees = state.employees.concat(added);
+    saveLocal();
+    enqueue('saveEmployees', added);
+    closeModal(); renderAll();
+    toast('✓ Added ' + added.length + (skipped ? ' · skipped ' + skipped + ' already there' : ''));
+  };
+}
+
+/* ════════════════ EMPLOYEE DETAIL (from Month tab) ════════════════ */
+function empDetail(id) {
+  var e = empById(id);
+  if (e) return empForm(e);
+  // Employee record missing (e.g. deleted from sheet) — show absences only
+  var list = state.absences.filter(function (a) { return a.employeeId === id; });
+  if (!list.length) return;
+  var n = empName(list[0]);
+  openModal('<h3>' + esc(n.en) + '</h3><div class="my muted">' + esc(n.my) + '</div><div class="dates">' + list.map(function (a) { return reasonPill(a) + ' ' + a.date; }).join('<br>') + '</div><div class="actions"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+
+/* ════════════════ EXCEL EXPORT ════════════════ */
+function exportExcel() {
+  if (typeof XLSX === 'undefined') return toast('Excel library not loaded — check internet');
+  var m = $('mPick').value || thisMonth();
+  var abs = monthFiltered(m);
+  var byEmp = {};
+  abs.forEach(function (a) { (byEmp[a.employeeId] = byEmp[a.employeeId] || []).push(a); });
+
+  // Sheet 1 — same layout as employee_sick_counter.xlsx
+  var summary = [['EMPLOYEE name english', 'employee name myanmar', 'SITE', 'DEPARTMENT', 'STARTED WORKING', 'DATES STOPPED', 'reason', 'total days this month', 'WARNING']];
+  Object.keys(byEmp).map(function (id) {
+    var list = byEmp[id].sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    return { list: list, n: empName(list[0]), total: sumDays(list) };
+  }).sort(function (a, b) { return b.total - a.total; }).forEach(function (r) {
+    var reasons = [];
+    r.list.forEach(function (a) { var t = a.reason === 'other' && a.reasonOther ? a.reasonOther : (REASON_BY[a.reason] || REASON_BY.other).en; if (reasons.indexOf(t) < 0) reasons.push(t); });
+    summary.push([r.n.en, r.n.my, r.n.site, r.n.dept, r.n.start,
+      r.list.map(function (a) { return a.date.slice(8) + (Number(a.days) === 0.5 ? '(½)' : ''); }).join(', '),
+      reasons.join(', '), r.total, r.total > CONFIG.WARN_OVER_DAYS ? 'OVER LIMIT (>' + CONFIG.WARN_OVER_DAYS + ')' : '']);
+  });
+
+  // Sheet 2 — every single missed day
+  var detail = [['Date', 'English name', 'Myanmar name', 'Site', 'Department', 'Full/Half', 'Reason', 'Notes', 'Logged by']];
+  abs.sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (a) {
+    var n = empName(a);
+    detail.push([a.date, n.en, n.my, n.site, n.dept, Number(a.days) === 0.5 ? 'Half' : 'Full',
+      a.reason === 'other' && a.reasonOther ? a.reasonOther : (REASON_BY[a.reason] || REASON_BY.other).en, a.notes || '', a.loggedBy || '']);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws1 = XLSX.utils.aoa_to_sheet(summary);
+  ws1['!cols'] = [{ wch: 22 }, { wch: 22 }, { wch: 7 }, { wch: 11 }, { wch: 14 }, { wch: 26 }, { wch: 24 }, { wch: 12 }, { wch: 16 }];
+  var ws2 = XLSX.utils.aoa_to_sheet(detail);
+  ws2['!cols'] = [{ wch: 12 }, { wch: 22 }, { wch: 22 }, { wch: 7 }, { wch: 14 }, { wch: 8 }, { wch: 18 }, { wch: 30 }, { wch: 14 }];
+  var roster = [['English name', 'Myanmar name', 'Site', 'Department', 'Started working', 'Time working', 'Status', 'Days off ' + m]];
+  state.employees.slice().sort(function (a, b) { return (a.site + a.dept + a.nameEn).localeCompare(b.site + b.dept + b.nameEn); }).forEach(function (e) {
+    roster.push([e.nameEn, e.nameMy, e.site, e.dept, e.startDate || '', tenure(e.startDate), e.active === false ? 'Left' : 'Working', sumDays(monthAbs(e.id, m))]);
+  });
+  var ws3 = XLSX.utils.aoa_to_sheet(roster);
+  ws3['!cols'] = [{ wch: 22 }, { wch: 22 }, { wch: 7 }, { wch: 11 }, { wch: 14 }, { wch: 12 }, { wch: 9 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Summary ' + m);
+  XLSX.utils.book_append_sheet(wb, ws2, 'All days ' + m);
+  XLSX.utils.book_append_sheet(wb, ws3, 'Employees');
+  XLSX.writeFile(wb, 'SRR_absences_' + m + (ui.site !== 'all' ? '_' + ui.site : '') + (ui.dept !== 'all' ? '_' + ui.dept : '') + '.xlsx');
+}
+
+/* ════════════════ SETTINGS ════════════════ */
+function settingsForm() {
+  openModal('<h3><i class="ti ti-settings" style="color:var(--blue)"></i> Settings</h3><div class="my muted" style="margin-bottom:14px">ဆက်တင်</div>' +
+    '<div class="field"><label>Apps Script URL (/exec)</label><input type="url" id="sUrl" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(prefs.url || CONFIG.APPS_SCRIPT_URL) + '"></div>' +
+    '<div class="hint">Status: <b id="sStatus">' + esc($('syncText').textContent) + (lastSyncErr ? ' — ' + esc(lastSyncErr.slice(0, 120)) : '') + '</b></div>' +
+    '<div class="hint">This phone: ' + state.employees.length + ' employees · ' + state.absences.length + ' absences · ' + state.queue.length + ' waiting to upload</div>' +
+    '<div class="hint">App version: <b>' + APP_VERSION + '</b></div>' +
+    '<button class="btn danger block" id="btnReset" style="margin-top:12px"><i class="ti ti-refresh-alert"></i> Reload everything from Google Sheet<small>&nbsp;Sheet မှ အားလုံး ပြန်ယူမည်</small></button>' +
+    '<a class="btn block" style="margin-top:12px;text-decoration:none" href="' + CONFIG.SHEET_URL + '" target="_blank" rel="noopener"><i class="ti ti-table"></i> Open Google Sheet</a>' +
+    '<div class="actions"><button class="btn" id="btnTest"><i class="ti ti-plug-connected"></i> Test</button>' +
+    '<button class="btn" id="btnSyncNow"><i class="ti ti-refresh"></i> Sync now</button>' +
+    '<button class="btn primary" id="btnSaveSettings">Save</button></div>');
+  $('btnSaveSettings').onclick = function () {
+    prefs.url = $('sUrl').value.trim(); savePrefs(); closeModal();
+    state.lastModified = 0; pull(true); toast('Saved / သိမ်းပြီး');
+  };
+  $('btnTest').onclick = function () {
+    var old = prefs.url; prefs.url = $('sUrl').value.trim();
+    $('sStatus').textContent = 'Testing…';
+    api('list').then(function (d) { $('sStatus').textContent = '✓ Connected — Google Sheet has ' + d.employees.length + ' employees, ' + d.absences.length + ' absences'; })
+      .catch(function (err) { $('sStatus').textContent = '✗ ' + err.message; })
+      .then(function () { prefs.url = old; });
+  };
+  $('btnSyncNow').onclick = function () { closeModal(); pull(true); };
+  $('btnReset').onclick = function () {
+    var waiting = state.queue.length;
+    if (waiting && !confirm(waiting + ' change(s) on this phone have NOT uploaded yet and will be lost. Continue?')) return;
+    state = { employees: [], absences: [], lastModified: 0, queue: [], sig: '' };
+    saveLocal(); closeModal(); renderAll();
+    pull(true).then(function () { toast('Reloaded from Google Sheet · ' + state.absences.length + ' absences'); });
+  };
+}
+
+/* ════════════════ Events ════════════════ */
+function bindEvents() {
+  document.querySelectorAll('.tab').forEach(function (t) { t.onclick = function () { showTab(t.dataset.tab); }; });
+  $('btnSettings').onclick = settingsForm;
+  $('modalBg').addEventListener('click', function (ev) { if (ev.target === $('modalBg')) closeModal(); });
+
+  // Log tab
+  $('empSearch').addEventListener('input', renderPicker);
+  $('empPicker').addEventListener('click', function (ev) {
+    var o = ev.target.closest('.opt'); if (!o) return;
+    form.employeeId = o.dataset.id; renderLog();
+  });
+  $('reasonGrid').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    form.reason = b.dataset.k; renderReasonGrid();
+    if (form.reason === 'other') $('reasonOther').focus();
+  });
+  $('segDays').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    form.days = Number(b.dataset.v); renderLog();
+  });
+  $('dFrom').addEventListener('change', function () {
+    if (!$('dTo').value || $('dTo').value < $('dFrom').value) $('dTo').value = $('dFrom').value;
+    renderPreview();
+  });
+  $('dTo').addEventListener('change', renderPreview);
+  $('btnSave').onclick = addToList;
+
+  // Month tab
+  $('mPick').addEventListener('change', renderMonth);
+  $('mDept').addEventListener('change', function () { ui.dept = $('mDept').value; renderMonth(); });
+  $('siteChips').addEventListener('click', function (ev) { var b = ev.target.closest('.chip'); if (!b) return; ui.site = b.dataset.site; renderMonth(); });
+  $('mList').addEventListener('click', function (ev) { var r = ev.target.closest('.emp-row'); if (r) empDetail(r.dataset.emp); });
+  $('btnExport').onclick = exportExcel;
+
+  // History tab
+  ['hSearch', 'hMonth', 'hReason'].forEach(function (id) { $(id).addEventListener('input', renderHistory); $(id).addEventListener('change', renderHistory); });
+  $('hList').addEventListener('click', function (ev) { var b = ev.target.closest('[data-del]'); if (b) confirmDelete(b.dataset.del); });
+
+  // Employees tab
+  $('eSearch').addEventListener('input', renderEmployees);
+  $('eShowInactive').addEventListener('change', renderEmployees);
+  $('eDept').addEventListener('change', renderEmployees);
+  $('btnAddEmp').onclick = function () { empForm(null); };
+  $('btnBulk').onclick = bulkForm;
+  $('eList').addEventListener('click', function (ev) { var r = ev.target.closest('[data-edit]'); if (r) empForm(empById(r.dataset.edit)); });
+
+  // Re-sync after sleep / backgrounding / reconnect
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) pull(false); });
+  window.addEventListener('focus', function () { pull(false); });
+  window.addEventListener('online', function () { pull(false); });
+  window.addEventListener('offline', updateSyncPill);
+}
+
+/* ════════════════ Init ════════════════ */
+function init() {
+  loadLocal();
+  loadPending();
+  $('dFrom').value = today();
+  $('dTo').value = today();
+  $('mPick').value = thisMonth();
+  $('loggedBy').value = prefs.loggedBy || '';
+  bindEvents();
+  renderAll();
+  updateSyncPill();
+  pull(true);
+  startPolling();
+}
+
+init();
+</script>
+</body>
+</html>
